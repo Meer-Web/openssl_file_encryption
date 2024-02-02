@@ -1,4 +1,5 @@
 #!/bin/bash
+# Author: F. Bischof (info@meer-web.nl)
 
 # Check method
 case "$1" in 
