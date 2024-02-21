@@ -1,5 +1,6 @@
 #!/bin/bash
 # Author: F. Bischof (info@meer-web.nl)
+# URL: https://github.com/Meer-Web/openssl_file_encryption
 
 # Check for input file
 if [ -n "$2" ]
