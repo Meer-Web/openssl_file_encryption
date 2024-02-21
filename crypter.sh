@@ -16,12 +16,12 @@ else
 fi
 
 # Check if keys are set
-if [ ! -f ~/.crypter/keys ]
+if [ ! -f ~/.crypter/.keys ]
 then
 	mkdir -p ~/.crypter
-	echo "KEYS=\"-des-ede3-cbc -pbkdf2\"" > keys
+	echo "KEYS=\"-des-ede3-cbc -pbkdf2\"" > ~/.crypter/.keys
 fi
-source ~/.crypter/keys
+source ~/.crypter/.keys
 
 # Check method
 case "$1" in 
