@@ -30,11 +30,12 @@ case "$1" in
 		if [ "`stat ${OUTPUT} | grep Size | awk '{ print $2}'`" != 0 ]
 		then
 			# OK - safe to delete the original input file
+			echo "OK - Deleting file ${INPUT}"
 			rm -f ${INPUT}
 			exit 0
 		else
 			# NOK - remove empty output file
-			echo "Output file is 0 bytes! Not removing the source file"
+			echo "CRITICAL - Output file ${OUTPUT} is 0 bytes! Not removing the source file ${INPUT}"
 			rm -f ${OUTPUT}
 			exit 2
 		fi
@@ -45,14 +46,14 @@ case "$1" in
 		base64 -d ${INPUT} > ${INPUT}.temp
 		openssl enc -d $KEYS -in ${INPUT}.temp -out ${OUTPUT}
 		rm -f ${INPUT}.temp
-		exit
 		if [ "`stat ${OUTPUT} | grep Size | awk '{ print $2}'`" != 0 ]
 		then
 			# OK - safe to delete the original input file
+			echo "OK - Deleting file ${INPUT}"
 			rm -f ${INPUT}
 		else
 			# NOK - remove empty output file
-			echo "Output file is 0 bytes! Not removing the source file"
+			echo "CRITICAL - Output file ${OUTPUT} is 0 bytes! Not removing the source file ${INPUT}"
 			rm -f ${OUTPUT}
 			exit 2
 		fi
