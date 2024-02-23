@@ -1,7 +1,7 @@
 # Crypter
 Script to encrypt and decrypt files easily using openssl
 ## Howto
-    ./crypter.sh -[e/-d] [inputfile]
+    ./crypter.sh -[e/d] [inputfile]
 ### Options
     -e for encrypt
     -d for decrypt
