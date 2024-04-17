@@ -12,7 +12,7 @@ then
 		exit 2
 	fi
 else
-	echo "Usage: ./crypter.sh -[e/d] [inputfile]";
+	echo "Usage: ./crypter.sh -[e/d] inputfile [--no-verify]";
 	exit 1
 fi
 
@@ -42,7 +42,7 @@ case "$1" in
 		else
 			# NOK - remove empty output file
 			echo "CRITICAL - Output file ${OUTPUT} is 0 bytes! Not removing the source file ${INPUT}"
-			rm -f ${OUTPUT} ${INPUT}.hash
+			rm -f ${OUTPUT} ${OUTPUT}.hash
 			exit 2
 		fi
 		;;
@@ -54,20 +54,27 @@ case "$1" in
 		rm -f ${INPUT}.temp
 		if [ "`stat ${OUTPUT} | grep Size | awk '{ print $2}'`" != 0 ]
 		then
-			# SHA256SUM CHECK
-			CUR_HASH=$(sha256sum --quiet --check ${OUTPUT}.crypt.hash)
-			if [ $? != 0 ]
+			if [ "$3" != '--no-verify' ]
 			then
-				# NOK - Hash mismatch
-				echo "CRITICAL - Hashes mismatching!"
-				rm -f ${OUTPUT}
-				exit 2
+				# SHA256SUM CHECK
+				CUR_HASH=$(sha256sum --quiet --check ${OUTPUT}.crypt.hash)
+				if [ $? != 0 ]
+				then
+					# NOK - Hash mismatch
+					echo "CRITICAL - Hashes mismatching!"
+					rm -f ${OUTPUT}
+					exit 2
+				else
+					# OK - safe to delete the original input file
+					echo "OK - Hashes matching, deleting input file"
+					rm -f ${INPUT} ${INPUT}.hash
+					exit 0
+				fi
 			else
-				# OK - safe to delete the original input file
-				echo "OK - Hashes matching, deleting input file"
+				echo "Ignoring hash verify"
 				rm -f ${INPUT} ${INPUT}.hash
-				exit 0
 			fi
+
 		else
 			# NOK - remove empty output file
 			echo "CRITICAL - Output file is 0 bytes! Not removing the input file"

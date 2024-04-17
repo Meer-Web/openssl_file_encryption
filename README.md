@@ -1,7 +1,7 @@
 # Crypter
 Script to encrypt and decrypt files easily using openssl.
 ## Howto
-    ./crypter.sh -[e/d] [inputfile] --no-verify
+    ./crypter.sh -[e/d] inputfile [--no-verify]
 ### Options
     -e for encrypt - Encrypts the filename and adds a hash file.
     -d for decrypt - Decrypts the file and removes crypt files after hash check.
