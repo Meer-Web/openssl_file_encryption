@@ -12,7 +12,7 @@ then
 		exit 2
 	fi
 else
-	echo "Usage: ./crypter.sh -[e/d] [inputfile]";
+	echo "Usage: ./crypter.sh -[e/d] inputfile [--no-verify]";
 	exit 1
 fi
 
@@ -28,9 +28,9 @@ source ~/.crypter/.algos
 case "$1" in 
 	"-e")
 		echo "Encrypting file ${INPUT}"
-		HASH=$(sha256sum $INPUT | awk '{ print $1 }')
-		OUTPUT="${INPUT}.${HASH}.crypto"
-		openssl enc $ALGOS -salt -in ${INPUT} -out ${OUTPUT}.temp
+		OUTPUT="${INPUT}.crypt"
+		HASH=$(sha256sum ${INPUT} > ${OUTPUT}.hash)
+		openssl enc ${ALGOS} -salt -in ${INPUT} -out ${OUTPUT}.temp > /dev/null 2>&1
 		base64 ${OUTPUT}.temp > ${OUTPUT}
 		rm -f ${OUTPUT}.temp
 		if [ "`stat ${OUTPUT} | grep Size | awk '{ print $2}'`" != 0 ]
@@ -42,34 +42,39 @@ case "$1" in
 		else
 			# NOK - remove empty output file
 			echo "CRITICAL - Output file ${OUTPUT} is 0 bytes! Not removing the source file ${INPUT}"
-			rm -f ${OUTPUT}
+			rm -f ${OUTPUT} ${OUTPUT}.hash
 			exit 2
 		fi
 		;;
 	"-d")
 		echo "Decrypting file ${INPUT}";
-		OUTPUT=$(echo $INPUT | sed 's/\.crypto//')
-		HASH=$(echo $OUTPUT | sed 's/^.*\.//')
+		OUTPUT=$(echo ${INPUT} | sed 's/\.crypt//')
 		base64 -d ${INPUT} > ${INPUT}.temp
-		openssl enc -d $ALGOS -in ${INPUT}.temp -out ${OUTPUT}
+		openssl enc -d ${ALGOS} -in ${INPUT}.temp -out ${OUTPUT} > /dev/null 2>&1
 		rm -f ${INPUT}.temp
 		if [ "`stat ${OUTPUT} | grep Size | awk '{ print $2}'`" != 0 ]
 		then
-			# SHA256SUM CHECK
-			CUR_HASH=$(sha256sum ${OUTPUT} | awk '{ print $1 }')
-			if [ "${HASH}" != "${CUR_HASH}" ]
+			if [ "$3" != '--no-verify' ]
 			then
-				# NOK - Hash mismatch
-				echo "CRITICAL - Hashes mismatching!"
-				rm -f ${OUTPUT}
-				exit 2
+				# SHA256SUM CHECK
+				CUR_HASH=$(sha256sum --quiet --check ${OUTPUT}.crypt.hash)
+				if [ $? != 0 ]
+				then
+					# NOK - Hash mismatch
+					echo "CRITICAL - Hashes mismatching!"
+					rm -f ${OUTPUT}
+					exit 2
+				else
+					# OK - safe to delete the original input file
+					echo "OK - Hashes matching, deleting input file"
+					rm -f ${INPUT} ${INPUT}.hash
+					exit 0
+				fi
 			else
-				# OK - safe to delete the original input file
-				echo "OK - Hashes matching, deleting input file"
-				rm -f ${INPUT}
-				mv ${OUTPUT} $(echo $OUTPUT | sed 's/\..*//')
-				exit 0
+				echo "Ignoring hash verify"
+				rm -f ${INPUT} ${INPUT}.hash
 			fi
+
 		else
 			# NOK - remove empty output file
 			echo "CRITICAL - Output file is 0 bytes! Not removing the input file"
